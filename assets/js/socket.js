@@ -10,7 +10,7 @@ import {Socket} from "phoenix"
 
 let user_id = Math.random()
 
-let socket = new Socket("/socket", {params: {user_id: user_id, token: window.userToken}})
+let socket = new Socket("/socket", {params: {token: "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJraW5naWRsZSIsImV4cCI6MTU2MDcxNTYwNywiaWF0IjoxNTU4Mjk2NDA3LCJpc3MiOiJraW5naWRsZSIsImp0aSI6IjgyNzc4MTM1LTdhYmUtNGFlMS05MDU4LTRiOTQ4NWQ1OTNkOSIsIm5iZiI6MTU1ODI5NjQwNiwic3ViIjoiMiIsInR5cCI6ImFjY2VzcyJ9.OgaTTBNDLwSgJqDXAS6z01wg85-2BGo1wE4BI_F1NLT9YmzxcaMb-WK-LD5nyPta1IflPjx9Qjh0PeSP4lmk_g"}}) //window.userToken}})
 
 // When you connect, you'll often need to authenticate the client.
 // For example, imagine you have an authentication plug, `MyAuth`,
@@ -54,14 +54,20 @@ let socket = new Socket("/socket", {params: {user_id: user_id, token: window.use
 //     end
 //
 // Finally, connect to the socket:
-socket.connect()
+//socket.connect()
 // Now that you are connected, you can join channels with a topic:
-let channel = socket.channel("game:" + user_id)
+let channel = socket.channel("game")
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) })
+
 channel.push("start", {skill: "strength"})
 channel.on('level_up', payload => {
   console.log(payload)
 });
+setTimeout(function() {
+  channel.push("change_skill", {skill: "strength"})
+}, 1000)
+
+window.channel = channel
 export default socket

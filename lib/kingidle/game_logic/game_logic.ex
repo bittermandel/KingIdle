@@ -1,9 +1,10 @@
 defmodule Kingidle.GameLogic do
+  require Phoenix.Channel
   use GenServer
   require Logger
 
-  def start_link(userid, socket) do
-    GenServer.start_link(__MODULE__, {userid, socket}, name: {:global, {:userid, userid}})
+  def start_link(socket, userid) do
+    GenServer.start_link(__MODULE__, {socket, userid}, name: {:global, {:userid, userid}})
   end
 
   def change_skill(userid, skill) do
@@ -18,8 +19,7 @@ defmodule Kingidle.GameLogic do
   end
 
   @impl true
-  def init({userid, socket}) do
-    Logger.debug("Game started for #{userid}")
+  def init({socket, userid}) do
     schedule_loop()
     {:ok, %{
       socket: socket,
@@ -51,12 +51,13 @@ defmodule Kingidle.GameLogic do
   end
 
   @impl true
-  def handle_info(:loop, %{userid: userid, activeSkill: activeSkill, skills: skills}) do
+  def handle_info(:loop, %{socket: socket, userid: userid, activeSkill: activeSkill, skills: skills}) do
     skills = Map.update(skills, activeSkill, 1, &(&1 + 1))
     Logger.info "#{inspect(activeSkill)} has been leveled up for user #{userid}: #{skills[activeSkill]}"
-    KingidleWeb.Endpoint.broadcast("game:#{userid}", "level_up", %{activeSkill: skills[activeSkill]})
+    Phoenix.Channel.push(socket, "level_up", %{skill: activeSkill, level: Map.get(skills, activeSkill)})
+    # KingidleWeb.Endpoint.broadcast("game:#{userid}", "level_up", %{activeSkill: skills[activeSkill]})
     schedule_loop()
-    {:noreply, %{userid: userid, activeSkill: activeSkill, skills: skills}}
+    {:noreply, %{socket: socket, userid: userid, activeSkill: activeSkill, skills: skills}}
   end
 
   defp schedule_loop do

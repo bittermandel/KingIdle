@@ -3,7 +3,7 @@ defmodule KingidleWeb.UserSocket do
   require Logger
 
   ## Channels
-  channel "game:*", KingidleWeb.GameChannel
+  channel "game", KingidleWeb.GameChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
@@ -16,11 +16,19 @@ defmodule KingidleWeb.UserSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(%{"user_id" => user_id}, socket) do
-    Logger.debug("#{user_id} connected")
-    {:ok, assign(socket, :user_id, user_id)}
+  def connect(%{"token" => token}, socket) do
+    case Guardian.Phoenix.Socket.authenticate(socket, Kingidle.Guardian, token) do
+      {:ok, authed_socket} ->
+        {:ok, authed_socket}
+      {:error, error} ->
+        IO.inspect error
+        :error
+    end
   end
 
+  def connect(_params, socket) do
+    :error
+  end
   # Socket id's are topics that allow you to identify all sockets for a given user:
   #
   #     def id(socket), do: "user_socket:#{socket.assigns.user_id}"
@@ -31,5 +39,5 @@ defmodule KingidleWeb.UserSocket do
   #     KingidleWeb.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
-  def id(socket), do: "user_socket:#{socket.assigns.user_id}"
+  def id(socket), do: "user_socket:#{socket.assigns.guardian_default_resource.id}"
 end
