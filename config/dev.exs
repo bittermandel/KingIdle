@@ -7,7 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :kingidle, KingidleWeb.Endpoint,
-  http: [port: 4000],
+  http: [port: System.get_env("PORT") || 4000],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -69,7 +69,7 @@ config :phoenix, :plug_init_mode, :runtime
 # Configure your database
 config :kingidle, Kingidle.Repo,
   username: "postgres",
-  password: "kingidle",
-  database: "kingidle_dev",
+  password: "postgress",
+  database: "postgres",
   hostname: "localhost",
   pool_size: 10
